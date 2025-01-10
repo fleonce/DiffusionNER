@@ -35,7 +35,7 @@ class BaseTrainer:
         # logging
         # name = str(datetime.datetime.now()).replace(' ', '_') + f'_B{args.train_batch_size}_E{args.epochs}_LR{args.lr}' 
         name = str(datetime.datetime.now()).replace(' ', '_')
-        self._log_path = os.path.join(self.args.log_path, self.args.label, name)
+        self._log_path = os.path.join(self.args.log_path)
         if self.record:
             util.create_directories_dir(self._log_path)
 
@@ -47,7 +47,7 @@ class BaseTrainer:
             shutil.copytree(SCRIPT_PATH,  os.path.join(code_dir, "diffusionner"))
 
         if hasattr(args, 'save_path') and self.record:
-            self._save_path = os.path.join(self.args.save_path, self.args.label, name)
+            self._save_path = os.path.join(self.args.save_path)
             util.create_directories_dir(self._save_path)
 
         self._log_paths = dict()

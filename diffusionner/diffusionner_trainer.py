@@ -211,9 +211,8 @@ class DiffusionNERTrainer(BaseTrainer):
             self._logger.info("Saved in: %s" % self._save_path)
             self._close_summary_writer()
 
-    def eval(self, dataset_path: str, types_path: str, input_reader_cls: BaseInputReader):
+    def eval(self, dataset_path: str, types_path: str, input_reader_cls: BaseInputReader, dataset_label="test"):
         args = self.args
-        dataset_label = 'test'
 
         self._logger.info("Dataset: %s" % dataset_path)
         self._logger.info("Model: %s" % args.model_type)

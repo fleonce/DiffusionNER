@@ -219,6 +219,7 @@ def get_token(h: torch.tensor, x: torch.tensor, token: int):
     return token_h
 
 class DiffusionNER(PreTrainedModel):
+    base_model_prefix = "model"
 
     def _init_weights(self, module):
         """ Initialize the weights """
@@ -259,7 +260,7 @@ class DiffusionNER(PreTrainedModel):
         wo_self_attn = False,
         wo_cross_attn = False):
         super().__init__(config)
-        self.model_type = model_type
+        self.my_model_type = model_type
         self._entity_type_count = entity_type_count
         self.pool_type = pool_type
         self.span_attn_layers = span_attn_layers
@@ -271,19 +272,16 @@ class DiffusionNER(PreTrainedModel):
         # build backbone
         if model_type == "roberta":
             self.roberta = RobertaModel(config)
-            self.model = self.roberta
 
         if model_type == "bert":
             self.bert = BertModel(config)
-            self.model = self.bert
-            for name, param in self.bert.named_parameters():
+            for name, param in self.model.named_parameters():
                 if "pooler" in name:
                     param.requires_grad = False
 
         if model_type == "albert":
             self.albert = AlbertModel(config)
-            self.model = self.albert
-        
+
         self.lstm_layers = lstm_layers
         if self.lstm_layers>0:
             self.lstm = nn.LSTM(input_size = config.hidden_size, hidden_size = config.hidden_size//2, num_layers = self.lstm_layers,  bidirectional = True, dropout = prop_drop, batch_first = True)
@@ -335,13 +333,7 @@ class DiffusionNER(PreTrainedModel):
             self.has_changed = False
             logger.info(f"Freeze bert weights from begining")
             logger.info("Freeze transformer weights")
-            if self.model_type == "bert":
-                model = self.bert
-            if self.model_type == "roberta":
-                model = self.roberta
-            if self.model_type == "albert":
-                model = self.albert
-            for name, param in model.named_parameters():
+            for name, param in self.model.named_parameters():
                 param.requires_grad = False
 
         self.init_weights()
@@ -398,6 +390,17 @@ class DiffusionNER(PreTrainedModel):
                              (1. - alphas_cumprod_prev) * torch.sqrt(alphas) / (1. - alphas_cumprod))
 
         self.register_buffer('p2_loss_weight', (p2_loss_weight_k + alphas_cumprod / (1 - alphas_cumprod)) ** -p2_loss_weight_gamma)
+
+    @property
+    def model(self):
+        if self.my_model_type == "roberta":
+            return self.roberta
+        elif self.my_model_type == "bert":
+            return self.bert
+        elif self.my_model_type == "albert":
+            return self.albert
+        else:
+            raise ValueError
 
     def predict_noise_from_start(self, x_t, t, x0):
         return (

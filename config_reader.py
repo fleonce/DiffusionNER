@@ -178,6 +178,12 @@ def _yield_configs(arg_parser, args, verbose=True):
             run_config=copy.deepcopy(run_config)
             config_list = _convert_config(run_config)
             run_args = arg_parser.parse_args(config_list, namespace=args_copy)
+            run_args.save_path = args.save_path
+            run_args.log_path = args.save_path
+            run_args.log_path = args.save_path
+            run_args.test_paths = run_args.test_path.split(",")
+            run_args.save_code = False
+            run_args.seed = args.seed
 
             run_args_list = []
             # batch eval
