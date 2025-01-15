@@ -113,6 +113,10 @@ def process_configs(target, arg_parser):
                 time.sleep(1)
 
     list(map(lambda x:x.join(),subprocess))
+    ret_codes = {x.exitcode for x in subprocess}
+    if ret_codes != {0}:
+        exit(next(iter(ret_codes)))
+    exit(0)
 
 def _read_config(path):
     lines = open(path).readlines()
