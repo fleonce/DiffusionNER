@@ -129,8 +129,7 @@ class JsonInputReader(BaseInputReader):
         # jrelations = doc['relations']
         jentities = doc['entities']
         if "orig_id" not in doc:
-            doc['orig_id'] = doc['org_id']
-        orig_id = doc['orig_id']
+            doc['orig_id'] = doc.get('org_id', 42)
         if "ltokens" in doc:
             ltokens = doc["ltokens"]
 
