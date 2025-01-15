@@ -126,6 +126,8 @@ class JsonInputReader(BaseInputReader):
         jrelations = None
 
         jtokens = doc['tokens']
+        if 'extended_tokens' in doc:
+            jtokens = doc['extended_tokens']
         # jrelations = doc['relations']
         jentities = doc['entities']
         if "orig_id" not in doc:
@@ -190,12 +192,13 @@ class JsonInputReader(BaseInputReader):
     def _parse_entities(self, jentities, doc_tokens, dataset) -> List[Entity]:
         entities = []
 
+        extended_offset = 0 if '<extra_id_22>' not in doc_tokens else doc_tokens.index('<extra_id_22>')
         for entity_idx, jentity in enumerate(jentities):
             entity_type = self._entity_types[jentity['type']]
             start, end = jentity['start'], jentity['end']
 
             # create entity mention  (exclusive)
-            tokens = doc_tokens[start:end]
+            tokens = doc_tokens[extended_offset + start: extended_offset + end]
             phrase = " ".join([t.phrase for t in tokens])
             entity = dataset.create_entity(entity_type, tokens, phrase)
             entities.append(entity)
