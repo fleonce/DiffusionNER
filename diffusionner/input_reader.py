@@ -116,7 +116,7 @@ class JsonInputReader(BaseInputReader):
 
     def _parse_dataset(self, dataset_path, dataset, dataset_label):
         documents = json.load(open(dataset_path))
-        for document in tqdm(documents, desc="Parse dataset '%s'" % dataset_label):
+        for document in tqdm(documents, desc="Parse dataset '%s'" % dataset_path):
             self._parse_document(document, dataset)
 
     def _parse_document(self, doc, dataset: Dataset) -> Document:
@@ -126,8 +126,9 @@ class JsonInputReader(BaseInputReader):
         jrelations = None
 
         jtokens = doc['tokens']
-        if 'extended_tokens' in doc:
-            jtokens = doc['extended_tokens']
+        if 'extended' in doc:
+            jtokens = doc['extended']
+
         # jrelations = doc['relations']
         jentities = doc['entities']
         if "orig_id" not in doc:
@@ -159,6 +160,10 @@ class JsonInputReader(BaseInputReader):
         special_tokens_map = self._tokenizer.special_tokens_map
         doc_encoding = [self._tokenizer.convert_tokens_to_ids(special_tokens_map['cls_token'])]
         seg_encoding = [1]
+        if not ltokens and not rtokens and '<extra_id_22>' in jtokens and '<extra_id_23>' in jtokens:
+            first = jtokens.index('<extra_id_22>')
+            second = jtokens.index('<extra_id_23>')
+            ltokens, jtokens, rtokens = jtokens[:first], jtokens[first + 1:second], jtokens[second + 1:]
 
         if ltokens is not None and len(ltokens)>0:
             for token_phrase in ltokens:
@@ -192,13 +197,12 @@ class JsonInputReader(BaseInputReader):
     def _parse_entities(self, jentities, doc_tokens, dataset) -> List[Entity]:
         entities = []
 
-        extended_offset = 0 if '<extra_id_22>' not in doc_tokens else doc_tokens.index('<extra_id_22>')
         for entity_idx, jentity in enumerate(jentities):
             entity_type = self._entity_types[jentity['type']]
-            start, end = jentity['start'], jentity['end']
+            start, end = jentity['start'] - 1, jentity['end'] - 1
 
             # create entity mention  (exclusive)
-            tokens = doc_tokens[extended_offset + start: extended_offset + end]
+            tokens = doc_tokens[start:end]
             phrase = " ".join([t.phrase for t in tokens])
             entity = dataset.create_entity(entity_type, tokens, phrase)
             entities.append(entity)
