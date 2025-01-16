@@ -147,7 +147,7 @@ class JsonInputReader(BaseInputReader):
             return None
         
         # parse entity mentions
-        entities = self._parse_entities(jentities, doc_tokens, dataset)
+        entities = self._parse_entities(jentities, doc_tokens, dataset, 'extended' in doc)
 
         # create document
         document = dataset.create_document(doc_tokens, entities, doc_encoding, seg_encoding)
@@ -194,12 +194,12 @@ class JsonInputReader(BaseInputReader):
 
         return doc_tokens, doc_encoding, seg_encoding
 
-    def _parse_entities(self, jentities, doc_tokens, dataset) -> List[Entity]:
+    def _parse_entities(self, jentities, doc_tokens, dataset, extended_tokens=False) -> List[Entity]:
         entities = []
 
         for entity_idx, jentity in enumerate(jentities):
             entity_type = self._entity_types[jentity['type']]
-            start, end = jentity['start'] - 1, jentity['end'] - 1
+            start, end = jentity['start'] - extended_tokens, jentity['end'] - extended_tokens
 
             # create entity mention  (exclusive)
             tokens = doc_tokens[start:end]
